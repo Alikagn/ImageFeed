@@ -4,6 +4,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -21,7 +22,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <color key="separatorColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <color key="sectionIndexBackgroundColor" systemColor="labelColor"/>
+                                <color key="sectionIndexBackgroundColor" name="YP Black"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="ImagesListCell" rowHeight="231" id="bue-9t-VaU" userLabel="ImagesListCell" customClass="ImagesListCell" customModule="ImageFeed" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="50" width="393" height="231"/>
@@ -109,7 +110,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="lTX-cd-nrD"/>
-                        <color key="backgroundColor" systemColor="labelColor"/>
+                        <color key="backgroundColor" name="YP Black"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="" image="tab_profile_active" id="Rm9-w7-nLr"/>
                     <navigationItem key="navigationItem" title="Navigation Item" id="Act-cx-hsC"/>
@@ -151,33 +152,10 @@
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kO6-a6-7VN">
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                                 <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4ef-uR-27z">
-                                        <rect key="frame" x="8" y="8" width="44" height="44"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="44" id="GyE-6C-qF3"/>
-                                            <constraint firstAttribute="height" constant="44" id="fqI-nJ-YKL"/>
-                                        </constraints>
-                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                        <state key="normal" image="nav_back_button_white"/>
-                                        <connections>
-                                            <action selector="didTapBackButton" destination="r8G-tJ-zGw" eventType="touchUpInside" id="T8Y-5A-xpr"/>
-                                        </connections>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2Sq-Yq-sqr">
-                                        <rect key="frame" x="174.66666666666666" y="791" width="44" height="44"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="44" id="drq-nY-OW1"/>
-                                            <constraint firstAttribute="height" constant="44" id="kMt-1w-12x"/>
-                                        </constraints>
-                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                        <state key="normal" image="share_button"/>
-                                        <connections>
-                                            <action selector="didTapShareButton:" destination="r8G-tJ-zGw" eventType="touchUpInside" id="9W1-lB-Dg1"/>
-                                        </connections>
-                                    </button>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" image="0" translatesAutoresizingMaskIntoConstraints="NO" id="Bzs-84-YsF">
-                                        <rect key="frame" x="20" y="60" width="352" height="333"/>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="0" translatesAutoresizingMaskIntoConstraints="NO" id="Bzs-84-YsF">
+                                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <color key="backgroundColor" name="YP Black"/>
                                     </imageView>
                                 </subviews>
                                 <viewLayoutGuide key="contentLayoutGuide" id="BY2-1h-vvZ"/>
@@ -186,18 +164,42 @@
                                     <outlet property="delegate" destination="r8G-tJ-zGw" id="mmF-rE-N8l"/>
                                 </connections>
                             </scrollView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" pointerInteraction="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2Sq-Yq-sqr">
+                                <rect key="frame" x="174.66666666666666" y="772" width="44" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="44" id="drq-nY-OW1"/>
+                                    <constraint firstAttribute="height" constant="44" id="kMt-1w-12x"/>
+                                </constraints>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" image="sharing_button"/>
+                                <connections>
+                                    <action selector="didTapShareButton:" destination="r8G-tJ-zGw" eventType="touchUpInside" id="9W1-lB-Dg1"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" pointerInteraction="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4ef-uR-27z">
+                                <rect key="frame" x="8" y="8" width="44" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="44" id="GyE-6C-qF3"/>
+                                    <constraint firstAttribute="height" constant="44" id="fqI-nJ-YKL"/>
+                                </constraints>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" image="Backward"/>
+                                <connections>
+                                    <action selector="didTapBackButton" destination="r8G-tJ-zGw" eventType="touchUpInside" id="T8Y-5A-xpr"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="APV-0E-enp"/>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="4ef-uR-27z" firstAttribute="leading" secondItem="APV-0E-enp" secondAttribute="leading" constant="8" id="5k6-1q-hwO"/>
-                            <constraint firstItem="2Sq-Yq-sqr" firstAttribute="centerX" secondItem="APV-0E-enp" secondAttribute="centerX" id="Afk-my-Alb"/>
-                            <constraint firstItem="kO6-a6-7VN" firstAttribute="top" secondItem="APV-0E-enp" secondAttribute="top" id="IJn-q4-DYz"/>
-                            <constraint firstItem="APV-0E-enp" firstAttribute="bottom" secondItem="kO6-a6-7VN" secondAttribute="bottom" id="MkS-2E-srR"/>
-                            <constraint firstItem="APV-0E-enp" firstAttribute="bottom" secondItem="2Sq-Yq-sqr" secondAttribute="bottom" constant="17" id="WnO-WG-5Lh"/>
-                            <constraint firstItem="4ef-uR-27z" firstAttribute="top" secondItem="APV-0E-enp" secondAttribute="top" constant="8" id="cLo-SG-8eq"/>
+                            <constraint firstItem="kO6-a6-7VN" firstAttribute="top" secondItem="loB-A9-LjY" secondAttribute="top" id="IJn-q4-DYz"/>
+                            <constraint firstAttribute="bottom" secondItem="kO6-a6-7VN" secondAttribute="bottom" id="MkS-2E-srR"/>
+                            <constraint firstItem="4ef-uR-27z" firstAttribute="leading" secondItem="APV-0E-enp" secondAttribute="leading" constant="8" id="SxL-3w-JKL"/>
                             <constraint firstItem="APV-0E-enp" firstAttribute="trailing" secondItem="kO6-a6-7VN" secondAttribute="trailing" id="cno-DJ-OXP"/>
+                            <constraint firstItem="APV-0E-enp" firstAttribute="bottom" secondItem="2Sq-Yq-sqr" secondAttribute="bottom" constant="36" id="jMG-wC-EKL"/>
+                            <constraint firstItem="2Sq-Yq-sqr" firstAttribute="centerX" secondItem="APV-0E-enp" secondAttribute="centerX" id="laX-FV-hqf"/>
                             <constraint firstItem="kO6-a6-7VN" firstAttribute="leading" secondItem="APV-0E-enp" secondAttribute="leading" id="m21-Zx-P9a"/>
+                            <constraint firstItem="4ef-uR-27z" firstAttribute="top" secondItem="APV-0E-enp" secondAttribute="top" constant="8" id="trP-LU-kuD"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="hQP-p0-M2G"/>
@@ -213,11 +215,14 @@
     </scenes>
     <resources>
         <image name="0" width="1600" height="1059"/>
+        <image name="Backward" width="24" height="24"/>
         <image name="like_button_on" width="42" height="42"/>
-        <image name="nav_back_button_white" width="24" height="24"/>
-        <image name="share_button" width="50" height="50"/>
+        <image name="sharing_button" width="51" height="51"/>
         <image name="tab_editorial_active" width="30" height="30"/>
         <image name="tab_profile_active" width="30" height="30"/>
+        <namedColor name="YP Black">
+            <color red="0.10196078431372549" green="0.10588235294117647" blue="0.13333333333333333" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
         <systemColor name="labelColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

@@ -338,13 +338,13 @@
                     </view>
                     <navigationItem key="navigationItem" id="P5l-Dt-gx4"/>
                     <connections>
-                        <outlet property="WebView" destination="XFw-Nx-ymn" id="Lar-U4-kEj"/>
                         <outlet property="progressView" destination="Gs4-xe-IFK" id="QDT-Jb-eGX"/>
+                        <outlet property="webView" destination="XFw-Nx-ymn" id="dn8-ZH-dmC"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="56j-Xx-Usw" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1850" y="-442"/>
+            <point key="canvasLocation" x="1723" y="-451"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="6dE-92-tNb">

@@ -15,7 +15,13 @@ final class SplashViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-       
+       /*
+        let allValues = UserDefaults.standard.dictionaryRepresentation()
+
+        allValues.keys.forEach { key in
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+       */
        if oauth2TokenStorage.token != nil {
            switchToTabBarController()
            print("Token существует")

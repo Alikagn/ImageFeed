@@ -7,7 +7,7 @@
 
 import UIKit
 
-struct OAuthTokenResponseBody: Codable {
+struct OAuthTokenResponseBody: Decodable {
     let accessToken: String
     let tokenType: String
     let scope: String
@@ -18,6 +18,8 @@ final class OAuth2Service {
     
     static let shared = OAuth2Service()
     private init() {}
+    
+    private var authToken: String?
     
     func makeOAuthTokenRequest(code: String) -> URLRequest? {
         guard let baseURL = URL(string: "https://unsplash.com") else {
@@ -56,11 +58,14 @@ final class OAuth2Service {
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
-                        let token = decoder.accessToken
-                        OAuth2TokenStorage.shared.token = token
-                        DispatchQueue.main.async { completion(.success(token)) }
-                         
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        
+                        let oAuthTokenResponseBody = try decoder.decode(OAuthTokenResponseBody.self, from: data)
+                        self.authToken = oAuthTokenResponseBody.accessToken
+                        OAuth2TokenStorage.shared.token = oAuthTokenResponseBody.accessToken
+                        DispatchQueue.main.async { completion(.success(oAuthTokenResponseBody.accessToken)) }
+                    
                     } catch {
                         print("Ошибка декодирования: \(error.localizedDescription)")
                         DispatchQueue.main.async { completion(.failure(error)) }

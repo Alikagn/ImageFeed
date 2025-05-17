@@ -55,7 +55,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
                 }
                 
             case .failure(let error):
-                print("Ошибка получения токена: \(error)")
+                print("Ошибка: токен не получен: \(error)")
             }
         }
     }

@@ -5,14 +5,13 @@
 //  Created by Dmitry Batorevich on 29.04.2025.
 //
 
-import UIKit
-
-struct OAuthTokenResponseBody: Decodable {
-    let accessToken: String
-    let tokenType: String
-    let scope: String
-    let createdAt: Int
+enum AuthServiceError: Error {
+    case invalidRequest
+    case noData
+    case missingToken
 }
+
+import UIKit
 
 final class OAuth2Service {
     
@@ -20,6 +19,10 @@ final class OAuth2Service {
     private init() {}
     
     private var authToken: String?
+    
+    private let urlSession = URLSession.shared
+    private var task: URLSessionTask?
+    private var lastCode: String?
     
     func makeOAuthTokenRequest(code: String) -> URLRequest? {
         guard let baseURL = URL(string: "https://unsplash.com") else {
@@ -46,52 +49,50 @@ final class OAuth2Service {
     }
     
     func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
-      
+        assert(Thread.isMainThread)
+        
+        guard lastCode != code else {
+            print("[fetchOAuthToken]: InvalidRequest - код уже использовался")
+            completion(.failure(AuthServiceError.invalidRequest))
+            return
+        }
+        
+        task?.cancel()
+        lastCode = code
+        
         guard let request = makeOAuthTokenRequest(code: code) else {
+            print("[fetchOAuthToken]: InvalidRequest - не удалось создать URLRequest")
             DispatchQueue.main.async {
-                completion(.failure(NSError(domain: "RequestError", code: 0)))
+                completion(.failure(AuthServiceError.invalidRequest))
             }
             return
         }
-
-            let task = URLSession.shared.data(for: request) { result in
-                switch result {
-                case .success(let data):
-                    do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        
-                        let oAuthTokenResponseBody = try decoder.decode(OAuthTokenResponseBody.self, from: data)
-                        self.authToken = oAuthTokenResponseBody.accessToken
-                        OAuth2TokenStorage.shared.token = oAuthTokenResponseBody.accessToken
-                        DispatchQueue.main.async { completion(.success(oAuthTokenResponseBody.accessToken)) }
-                    
-                    } catch {
-                        print("Ошибка декодирования: \(error.localizedDescription)")
-                        DispatchQueue.main.async { completion(.failure(error)) }
-                    }
+        
+        let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
+            DispatchQueue.main.async {
+                guard let self else { return }
                 
+                switch result {
+                case .success(let oAuthTokenResponseBody):
+                    self.authToken = oAuthTokenResponseBody.accessToken
+                    OAuth2TokenStorage.shared.token = oAuthTokenResponseBody.accessToken
+                    completion(.success(oAuthTokenResponseBody.accessToken))
+                    
                 case .failure(let error):
                     if let networkError = error as? NetworkError {
-                        switch networkError {
-                        case .httpStatusCode(let code, let data):
-                            print("Ошибка: сервер вернул статус-код \(code)")
-                            if let data = data, let errorString = String(data: data, encoding: .utf8) {
-                                print("Ответ сервера:\n\(errorString)")
-                            } else {
-                                print("Ответ сервера пустой или не удалось декодировать")
-                            }
-                        case .urlRequestError(let requestError):
-                            print("Ошибка запроса: \(requestError)")
-                        case .urlSessionError:
-                            print("Неизвестная ошибка URLSession")
-                        }
+                        print("[fetchOAuthToken]: \(networkError.errorDescription ?? "Unknown error")")
                     } else {
-                        print("Неизвестная ошибка сети: \(error)")
+                        print("[fetchOAuthToken]: \(error.localizedDescription)")
                     }
-                    DispatchQueue.main.async { completion(.failure(error)) }
+                    completion(.failure(error))
                 }
+                
+                self.task = nil
+                self.lastCode = nil
             }
-            task.resume()
+        }
+        
+        self.task = task
+        task.resume()
     }
 }

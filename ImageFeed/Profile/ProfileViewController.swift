@@ -6,12 +6,23 @@
 //
 
 import UIKit
+import Kingfisher
+import SwiftKeychainWrapper
+
+struct ProfileImage: Codable {
+    let large: String
+}
 
 final class ProfileViewController: UIViewController {
-   
+    private let profileService = ProfileService.shared
+    private var profileImageServiceObserver: NSObjectProtocol? //
+    static let didChangeNotification = Notification.Name(rawValue: "ProfileImageProvideDidChange")
+    
     private lazy var userAvatarImageView: UIImageView = {
         let profileImage = UIImage(named: "avatar")
         let imageView = UIImageView(image: profileImage)
+        imageView.layer.cornerRadius = 35
+        imageView.clipsToBounds = true
         return imageView
     }()
     
@@ -49,9 +60,10 @@ final class ProfileViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         addSubView()
         setConstraints()
+        updateProfileDetails()
+
     }
     
     private func addSubView() {
@@ -64,8 +76,47 @@ final class ProfileViewController: UIViewController {
         }
     }
     
-    @objc private func didTapButton() {
-        // TODO: - Добавить логику при нажатии на кнопку
+    private func updateProfileDetails() {
+        if let profile = profileService.profile {
+            userNameLabel.text = profile.name
+            userLoginNameLabel.text = profile.loginName
+            userDescriptionLabel.text = profile.bio
+        }
+        updateUserFoto()
+    }
+    
+   @objc private func didTapButton() {
+      // TO DO
+   }
+
+    
+    private func updateUserFoto() {
+        
+        DispatchQueue.main.async {
+            guard
+                let profileImageURL = ProfileImageService.shared.avatarURL,
+                let url = URL(string: profileImageURL)
+            else {
+                print("[updateUserFotoImageView]: Картинка профиля не найдена или URL невалиден")
+                return
+            }
+            
+            self.userAvatarImageView.kf.setImage(
+                with: url,
+                placeholder: UIImage(named: "placeholder"),
+                options: [
+                    .transition(.fade(0.2)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 140, height: 140)))
+                ]
+            ) { result in
+                switch result {
+                case .success(let value):
+                    print("[updateUserFotoImageView]: Изображение успешно загружено: \(value.source.url?.absoluteString ?? "")")
+                case .failure(let error):
+                    print("[updateUserFotoImageView]: Ошибка загрузки изображения: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
 
@@ -91,3 +142,4 @@ extension ProfileViewController {
         ])
     }
 }
+

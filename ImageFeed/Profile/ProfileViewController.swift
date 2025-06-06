@@ -58,6 +58,8 @@ final class ProfileViewController: UIViewController {
         return button
     }()
     
+    private let profileLogoutService = ProfileLogoutService.shared
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         addSubView()
@@ -86,7 +88,14 @@ final class ProfileViewController: UIViewController {
     }
     
    @objc private func didTapButton() {
-      // TO DO
+       let alert = UIAlertController(title: "Пока, пока!",
+                                     message: "Уверены, что хотите выйти?",
+                                     preferredStyle: .alert)
+       alert.addAction(UIAlertAction(title: "Да", style: .default) { [weak self] _ in
+           self?.profileLogoutService.logout()
+       })
+       alert.addAction(UIAlertAction(title: "Нет", style: .cancel))
+       present(alert, animated: true)
    }
 
     

@@ -4,12 +4,6 @@
 //
 //  Created by Dmitry Batorevich on 21.05.2025.
 //
-enum HTTPMethod: String {
-    case get = "GET"
-    case post = "POST"
-    case put = "PUT"
-    case delete = "DELETE"
-}
 
 import Foundation
 
@@ -84,5 +78,12 @@ final class ProfileService {
         
         self.task = task
         task.resume()
+    }
+    
+    func reset() {
+        profile = nil
+        task?.cancel()
+        task = nil
+        isFetching = false
     }
 }

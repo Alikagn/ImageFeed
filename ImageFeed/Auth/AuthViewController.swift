@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import ProgressHUD
+import SwiftKeychainWrapper
 
 final class AuthViewController: UIViewController {
     
@@ -42,8 +44,10 @@ final class AuthViewController: UIViewController {
 
 extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
+        UIBlockingProgressHUD.show()
         OAuth2Service.shared.fetchOAuthToken(code) { [weak self] result in
             guard let self else { return }
+            UIBlockingProgressHUD.dismiss()
             switch result {
             case .success(let token):
                 OAuth2TokenStorage.shared.token = token
@@ -56,8 +60,15 @@ extension AuthViewController: WebViewViewControllerDelegate {
                 
             case .failure(let error):
                 print("Ошибка: токен не получен: \(error)")
+                self.showErrorAlert(message: "Не удалось войти в систему")
             }
         }
+    }
+    
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "Что-то пошло не так", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ок", style: .default))
+        self.present(alert, animated: true, completion: nil)
     }
     
    func webViewViewControllerDidCancel(_ vc: WebViewViewController) {

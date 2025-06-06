@@ -13,25 +13,74 @@ final class SplashViewController: UIViewController {
     private let oauth2Service = OAuth2Service.shared
     private let oauth2TokenStorage = OAuth2TokenStorage.shared
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-       /*
-        let allValues = UserDefaults.standard.dictionaryRepresentation()
+    private let profileService = ProfileService.shared
+    
+    private lazy var splashImageView: UIImageView = {
+        let splashImage = UIImage(named: "Vector")
+        let imageView = UIImageView(image: splashImage)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        view.backgroundColor = .ypBlack
+        view.addSubview(splashImageView)
+        setConstraints()
+    }
+    
+     override func viewDidAppear(_ animated: Bool) {
+         super.viewDidAppear(animated)
+         
+         if oauth2TokenStorage.token != nil {
+             fetchProfile()
+             print("Token exists, fetching profile")
+         } else {
+             presentAuthViewController()
+             print("Token is nil, showing authentication screen")
+         }
+     }
+    
+     func presentAuthViewController() {
+         let storyboard = UIStoryboard(name: "Main", bundle: nil)
 
-        allValues.keys.forEach { key in
-            UserDefaults.standard.removeObject(forKey: key)
-        }
-       */
-       if oauth2TokenStorage.token != nil {
-           switchToTabBarController()
-           print("Token существует")
-        } else {
-           performSegue(withIdentifier: ShowAuthenticationScreenSegueIdentifier, sender: nil)
-           print("Token'а нет")
+         guard let authVC = storyboard.instantiateViewController(withIdentifier: "AuthViewController") as? AuthViewController else {
+             return
+         }
+         
+         authVC.delegate = self
+         
+         let navigationController = UINavigationController(rootViewController: authVC)
+
+         navigationController.modalPresentationStyle = .fullScreen
+         
+         present(navigationController, animated: true, completion: nil)
+     }
+     
+    private func fetchProfile() {
+        UIBlockingProgressHUD.show()
+        
+        profileService.fetchProfile { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            
+            guard let self else { return }
+            
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let profile):
+                    let username = profile.username
+                    ProfileImageService.shared.fetchProfileImageURL(username: username) { _ in }
+                    self.switchToTabBarController()
+                case .failure:
+                    // TODO: Обработка ошибки загрузки профиля
+                    print("Ошибка загрузки профиля")
+                }
+            }
         }
     }
     
-    private func switchToTabBarController() {
+private func switchToTabBarController() {
         guard let window = UIApplication.shared.windows.first else { fatalError("Invalid Configuration") }
         let tabBarController = UIStoryboard(name: "Main", bundle: .main)
             .instantiateViewController(withIdentifier: "TabBarViewController")
@@ -76,5 +125,17 @@ extension SplashViewController: AuthViewControllerDelegate {
                 break
             }
         }
+    }
+}
+
+
+extension SplashViewController {
+    private func setConstraints() {
+        NSLayoutConstraint.activate([
+            splashImageView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            splashImageView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+            splashImageView.widthAnchor.constraint(equalToConstant: 75),
+            splashImageView.heightAnchor.constraint(equalToConstant: 78)
+        ])
     }
 }

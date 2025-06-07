@@ -87,14 +87,19 @@ final class ProfileViewController: UIViewController {
         updateUserFoto()
     }
     
+    private func makeLogoutAlert() -> UIAlertController {
+        let alert = UIAlertController(title: "Пока, пока!",
+                                      message: "Уверены, что хотите выйти?",
+                                      preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Да", style: .default) { [weak self] _ in
+            self?.profileLogoutService.logout()
+        })
+        alert.addAction(UIAlertAction(title: "Нет", style: .cancel))
+        return alert
+    }
+    
    @objc private func didTapButton() {
-       let alert = UIAlertController(title: "Пока, пока!",
-                                     message: "Уверены, что хотите выйти?",
-                                     preferredStyle: .alert)
-       alert.addAction(UIAlertAction(title: "Да", style: .default) { [weak self] _ in
-           self?.profileLogoutService.logout()
-       })
-       alert.addAction(UIAlertAction(title: "Нет", style: .cancel))
+       let alert = makeLogoutAlert()
        present(alert, animated: true)
    }
 

@@ -56,7 +56,7 @@ final class ImagesListService {
             do {
                 let decoder = JSONDecoder()
                 let photoResults = try decoder.decode([PhotoResult].self, from: data)
-                
+    
                 let newPhotos = photoResults.map { result in
                     Photo(
                         id: result.id,
@@ -149,14 +149,5 @@ final class ImagesListService {
         }
         
         task.resume()
-    }
-}
-
-extension Array {
-    func withReplaced(itemAt index: Int, newValue: Element) -> [Element] {
-        var newArray = self
-        guard index >= 0 && index < newArray.count else { return newArray }
-        newArray[index] = newValue
-        return newArray
     }
 }

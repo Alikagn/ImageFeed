@@ -16,9 +16,7 @@ final class ImagesListCell: UITableViewCell {
     @IBOutlet var dateLabel: UILabel!
     
     @IBAction func likeButtonClicked(_ sender: Any) {
-        print("Like button tapped")
         isLiked.toggle()
-        print("isLiked now: \(isLiked)")
         delegate?.imageListCellDidTapLike(self)
     }
     
@@ -37,8 +35,9 @@ final class ImagesListCell: UITableViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
+        let placeholderImage = UIImage(named: "placeholderImage")
         cellImage.kf.cancelDownloadTask()
-        cellImage.image = UIImage(named: "placeholder_photo")
+        cellImage.image = placeholderImage
     }
     
     func setIsLiked(_ liked: Bool) {
@@ -47,11 +46,12 @@ final class ImagesListCell: UITableViewCell {
     
     func configure(with imageURL: URL?, liked: Bool, dateText: String?) {
         setIsLiked(liked)
+        let placeholderImage = UIImage(named: "placeholderImage")
         
         if let url = imageURL {
-            cellImage.kf.setImage(with: url, placeholder: UIImage(named: "placeholder_photo"))
+            cellImage.kf.setImage(with: url, placeholder: placeholderImage)
         } else {
-            cellImage.image = UIImage(named: "placeholder_photo")
+            cellImage.image = placeholderImage
         }
         
         dateLabel.text = dateText

@@ -58,9 +58,10 @@ final class ImagesListViewController: UIViewController {
     
     
     func configCell(for cell: ImagesListCell, with indexPath: IndexPath) {
+        let placeholderPhoto = UIImage(named: "placeholder_photo")
         let photo = photos[indexPath.row]
         
-        cell.cellImage.image = UIImage(named: "placeholder_photo")
+        cell.cellImage.image =  placeholderPhoto 
         
         cell.cellImage.kf.indicatorType = .activity
         
@@ -151,15 +152,14 @@ extension ImagesListViewController: ImagesListCellDelegate {
                 switch result {
                 case .success:
                     self.photos = self.imagesListService.photos
-                    UIBlockingProgressHUD.dismiss()
                 case .failure (let error):
-                    UIBlockingProgressHUD.dismiss()
                     print("Ошибка при изменении лайка:", error)
                     
                     let alert = UIAlertController(title: "Что-то пошло не так", message: "Не удалось поставить лайк", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "Ок", style: .default))
                     self.present(alert, animated: true)
                 }
+                UIBlockingProgressHUD.dismiss()
             }
         }
     

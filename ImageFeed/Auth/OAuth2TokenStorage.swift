@@ -23,7 +23,7 @@ final class OAuth2TokenStorage {
            if let newValue {
                keychainWrapper.set(newValue, forKey: tokenKey)
             } else {
-                keychainWrapper.removeObject(forKey: tokenKey)
+               keychainWrapper.removeObject(forKey: tokenKey)
             }
         }
     }

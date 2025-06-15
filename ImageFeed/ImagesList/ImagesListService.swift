@@ -3,151 +3,161 @@
 //  ImageFeed
 //
 //  Created by Dmitry Batorevich on 01.06.2025.
-
- 
 import Foundation
 
-final class ImagesListService {
-    
+final class ImagesListService: ImagesListServiceProtocol {
     static let shared = ImagesListService()
     private init() {}
     
-    private(set) var photos: [Photo] = []
+    static let didChangeNotification = Notification.Name("ImagesListServiceDidChange")
     
-    private let dateFormatter = ISO8601DateFormatter()
+    private (set) var photos: [Photo] = []
+    private var lastLoadedPage: Int?
+    private var task: URLSessionTask?
+    private let perPage = 10
+    private let oAuth2TokenStorage = OAuth2TokenStorage.shared
+    private let urlSession = URLSession.shared
+    private var isFetching: Bool = false
     
-    func clearImages() {
-        photos.removeAll()
-    }
-    
-    static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
-    
-    private var lastLoadedPage = 0
-    private var isLoading = false
-    
-    func fetchPhotosNextPage() {
-        guard !isLoading else { return }
+    private func makePhotosRequest(page: Int, perPage: Int) -> URLRequest? {
+        guard let token = oAuth2TokenStorage.token else {
+            print("[makePhotosRequest]: MissingToken - токен отсутствует")
+            return nil
+        }
         
-        isLoading = true
+        guard let baseURL = Constants.defaultBaseURL else {
+            print("[makeProfileRequest]: Ошибка - baseURL отсутствует")
+            return nil
+        }
         
-        let nextPage = lastLoadedPage + 1
+        let photoPath = baseURL.appendingPathComponent("/photos")
         
-        guard let url = URL(string: "https://api.unsplash.com/photos?page=\(nextPage)&client_id=\(Constants.accessKey)") else {
-            isLoading = false
-            return
+        var components = URLComponents(url: photoPath, resolvingAgainstBaseURL: true)
+        components?.queryItems = [
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "per_page", value: "\(perPage)")
+        ]
+        
+        guard let url = components?.url else {
+            print("[makeProfileRequest]: Ошибка - Невозможно создать URL")
+            return nil
         }
         
         var request = URLRequest(url: url)
-        request.setValue("Client-ID \(Constants.accessKey)", forHTTPHeaderField: "Authorization")
-        
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            defer { self?.isLoading = false }
-            
-            if let error {
-                print("Ошибка загрузки фотографий \(error)")
-                return
-            }
-            
-            guard let data else {
-                print("Нет данных")
-                return
-            }
-            
-            do {
-                let decoder = JSONDecoder()
-                let photoResults = try decoder.decode([PhotoResult].self, from: data)
+        request.httpMethod = HttpMethodsConstants.httpMethodGet
+        request.setValue("Bearer \(token)", forHTTPHeaderField: HttpMethodsConstants.forHTTPHeaderField)
+        return request
+    }
     
-                let newPhotos = photoResults.map { result in
-                    Photo(
-                        id: result.id,
-                        size: CGSize(width: result.width, height: result.height),
-                        createdAt: self?.dateFormatter.date(from: result.createdAt),
-                        welcomeDescription: result.description,
-                        thumbImageURL: result.urls.thumb,
-                        largeImageURL: result.urls.full,
-                        isLiked: result.likedByUser
-                    )
+    func fetchPhotosNextPage() {
+        guard !isFetching else {
+            print("[fetchPhotosNextPage]: FetchingInProgress - запрос уже выполняется")
+            return
+        }
+        
+        let nextPage = (lastLoadedPage ?? 0) + 1
+        
+        guard let request = makePhotosRequest(page: nextPage, perPage: perPage) else {
+            print("[fetchPhotosNextPage]: InvalidRequest - не удалось создать URLRequest")
+            return
+        }
+        
+        isFetching = true
+        task?.cancel()
+        
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<[PhotoResult], Error>) in
+            assert(Thread.isMainThread)
+            
+            guard let self else { return }
+            self.isFetching = false
+            
+            switch result {
+            case .success(let photoResult):
+                let newPhotos = photoResult.map { photoResult in
+                    Photo(from: photoResult)
                 }
                 
-                DispatchQueue.main.async { [weak self] in
-                    self?.photos.append(contentsOf: newPhotos)
-                    self?.lastLoadedPage = nextPage
-                    
-                    print("Загружено фотографий: \(self?.photos.count ?? 0)")
-                    
-                    NotificationCenter.default.post(name: ImagesListService.didChangeNotification, object: nil)
+                DispatchQueue.main.async {
+                    self.photos.append(contentsOf: newPhotos)
+                    self.lastLoadedPage = nextPage
+                    NotificationCenter.default.post(name: ImagesListService.didChangeNotification, object: self)
                 }
-            } catch {
-                let dataString = String(data: data, encoding: .utf8) ?? "недоступны"
-                print("[ImagesListService.fetchPhotosNextPage]: Ошибка декодирования данных: \(error). Данные: \(dataString)")
+                
+            case .failure(let error):
+                print("[fetchPhotosNextPage]: Ошибка - \(error.localizedDescription)")
             }
+        }
+        
+        self.task = task
+        task.resume()
+    }
+    
+    private func makeChangeLikeRequest(photoId: String, token: String, isLike: Bool) -> URLRequest? {
+        guard let url = URL(string: "/photos/\(photoId)/like", relativeTo: Constants.defaultBaseURL) else {
+            print("[makeChangeLikeRequest]: Ошибка - Невозможно создать URL")
+            return nil
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = isLike ? HttpMethodsConstants.httpMethodPost : HttpMethodsConstants.httpMethodDelete
+        request.setValue("Bearer \(token)", forHTTPHeaderField: HttpMethodsConstants.forHTTPHeaderField)
+        return request
+    }
+    
+    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
+        guard !isFetching else {
+            print("[changeLike]: FetchingInProgress - запрос уже выполняется")
+            return
+        }
+        
+        guard let token = oAuth2TokenStorage.token else {
+            print("[changeLike]: MissingToken - токен отсутствует")
+            return
+        }
+        
+        guard let request = makeChangeLikeRequest(photoId: photoId, token: token, isLike: isLike) else {
+            print("[changeLike]: InvalidRequest - не удалось создать URLRequest")
+            DispatchQueue.main.async {
+                completion(.failure(AuthServiceError.invalidRequest))
+            }
+            return
+        }
+        
+        isFetching = true
+        task?.cancel()
+        
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<LikeResult, Error>) in
+            assert(Thread.isMainThread)
             
-        } .resume()
+            guard let self else { return }
+            self.isFetching = false
+            
+            switch result {
+            case .success:
+                if let index = self.photos.firstIndex(where: { $0.id == photoId}) {
+                
+                    DispatchQueue.main.async {
+                        self.photos[index].isLiked = isLike
+                        completion(.success(()))
+                        NotificationCenter.default.post(name: ImagesListService.didChangeNotification, object: self)
+                    }
+                }
+                
+            case .failure(let error):
+                print("[changeLike]: Ошибка - \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+        }
+        
+        self.task = task
+        task.resume()
     }
     
     func reset() {
         photos.removeAll()
-        lastLoadedPage = 0
-    }
-    
-    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
-        guard let url = URL(string: "https://api.unsplash.com/photos/\(photoId)/like") else {
-            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
-            return
-        }
-        
-        guard let token = OAuth2TokenStorage.shared.token else {
-            let error = NSError(domain: "TokenError", code: 401, userInfo: nil)
-            print("Token error - \(error.localizedDescription)")
-            completion(.failure(error))
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        
-        request.httpMethod = isLike ? HTTPMethod.post.rawValue : HTTPMethod.delete.rawValue
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        request.httpBody = nil
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error {
-                completion(.failure(error))
-                return
-            }
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(NSError(domain: "InvalidResponse", code: 0, userInfo: nil)))
-                return
-            }
-            
-            if (200...299).contains(httpResponse.statusCode) {
-                DispatchQueue.main.async {
-                    if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
-                        let photo = self.photos[index]
-                        
-                        let newPhoto = Photo(
-                            id: photoId,
-                            size: photo.size,
-                            createdAt: photo.createdAt,
-                            welcomeDescription: photo.welcomeDescription,
-                            thumbImageURL: photo.thumbImageURL,
-                            largeImageURL: photo.largeImageURL,
-                            isLiked: !photo.isLiked
-                        )
-                        self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
-                    }
-                }
-                
-                DispatchQueue.main.async {
-                    completion(.success(()))
-                }
-                
-            } else {
-                completion(.failure(NSError(domain: "ServerError", code: httpResponse.statusCode, userInfo:nil)))
-            }
-        }
-        
-        task.resume()
+        lastLoadedPage = nil
+        task?.cancel()
+        task = nil
+        isFetching = false
     }
 }
